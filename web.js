@@ -35,33 +35,27 @@ connection.connect();
 
 // API: get all events
 app.get('/api/events', function (request, response) {
-    // Query events
-    connection.query('SELECT * FROM events', function (err, rows, fields) {
-        if (err) {
+
+    // Query all events
+    var query = 'SELECT * FROM events';
+
+    // If start parameter was passed, query events after that date
+    var startDate = request.query.start;
+    if (startDate) {
+        query = "SELECT * FROM events WHERE date >= '" + startDate + "'";
+    }
+
+    // Execute query
+    connection.query(query, function (err, rows, fields) {
+        if (err)
             console.error('Query error: ' + err.stack);
-        }
-        else {
-            console.error('Query response: ' + JSON.stringify(rows));
+        else
             response.write(JSON.stringify(rows));
-        }
+
         response.end();
     });
-});
 
-app.get('/api/events/:start', function (request, response) {
-    // Query events
-    connection.query('SELECT * FROM events WHERE date >= '.request.params.start, function (err, rows, fields) {
-        if (err) {
-            console.error('Query error: ' + err.stack);
-        }
-        else {
-            console.error('Query response: ' + JSON.stringify(rows));
-            response.write(JSON.stringify(rows));
-        }
-        response.end();
-    });
 });
-
 
 
 // Close database connection when shutting down the server
