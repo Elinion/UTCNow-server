@@ -8,10 +8,11 @@ var mysql = require("mysql");
 
 // Connect to local mysql database
 var connection = mysql.createConnection({
-    host: 'localhost',
-    port: '8889',
-    user: 'alex',
-    database: 'utcnow'
+    host: 'sql7.freemysqlhosting.net',
+    port: '3306',
+    user: 'sql7121051',
+    password: 'azAp2vKtN7',
+    database: 'sql7121051'
 });
 
 var app = express();
@@ -34,18 +35,34 @@ connection.connect();
 
 // API: get all events
 app.get('/api/events', function (request, response) {
-
     // Query events
     connection.query('SELECT * FROM events', function (err, rows, fields) {
         if (err) {
             console.error('Query error: ' + err.stack);
         }
         else {
+            console.error('Query response: ' + JSON.stringify(rows));
             response.write(JSON.stringify(rows));
         }
         response.end();
     });
 });
+
+app.get('/api/events/:start', function (request, response) {
+    // Query events
+    connection.query('SELECT * FROM events WHERE date >= '.request.params.start, function (err, rows, fields) {
+        if (err) {
+            console.error('Query error: ' + err.stack);
+        }
+        else {
+            console.error('Query response: ' + JSON.stringify(rows));
+            response.write(JSON.stringify(rows));
+        }
+        response.end();
+    });
+});
+
+
 
 // Close database connection when shutting down the server
 process.on('exit', function () {
