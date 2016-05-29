@@ -35,6 +35,7 @@ connection.connect();
 
 // API: get all events
 app.get('/api/events', function (request, response) {
+    response.set('Content-Type', 'application/json');
 
     // Query all events
     var query = 'SELECT * FROM events';
@@ -46,7 +47,7 @@ app.get('/api/events', function (request, response) {
     }
 
     // Execute query
-    connection.query(query, function (err, rows, fields) {
+    connection.query(query, function (err, rows) {
         if (err)
             console.error('Query error: ' + err.stack);
         else
