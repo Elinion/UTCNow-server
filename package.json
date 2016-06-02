@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node web.js"
   },
+  "dependencies" : {
+    "express"    : "latest",
+    "mysql"    : "latest",
+  },
   "repository": {
     "type": "git",
     "url": "git+https://rockynox@github.com/Elinion/UTCNow-server.git"
