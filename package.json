@@ -8,7 +8,7 @@
   },
   "dependencies" : {
     "express"    : "latest",
-    "mysql"    : "latest",
+    "mysql"    : "latest"
   },
   "repository": {
     "type": "git",
