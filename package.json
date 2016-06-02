@@ -4,7 +4,7 @@
   "description": "Server for UTCNow",
   "main": "web.js",
   "scripts": {
-    "test": "node web.js"
+    "start": "node web.js"
   },
   "repository": {
     "type": "git",
