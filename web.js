@@ -284,7 +284,10 @@ process.on('exit', function () {
     app.close();
 });
 
-app.listen(8080);
+
+//Heroku dynamic port;
+app.listen(process.env.PORT || 8080)
+//app.listen(8080);
 
 // The code below will be use for CAS connection
 //
