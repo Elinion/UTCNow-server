@@ -10,8 +10,8 @@ var mysql = require("mysql");
 var connection = mysql.createConnection({
     host: 'utcnow.ddns.net',
     port: '3306',
-    user: 'utcnow',
-    password: 'utcnow2016',
+    user: '***',
+    password: '****',
     database: 'utcnow'
 });
 
