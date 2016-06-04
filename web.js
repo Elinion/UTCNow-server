@@ -8,11 +8,11 @@ var mysql = require("mysql");
 
 // Connect to local mysql database
 var connection = mysql.createConnection({
-    host: 'ec2-54-163-249-150.compute-1.amazonaws.com',
-    port: '5432',
-    user: 'mdflozlvybodqw',
-    password: 'g4GdNbIrVn2XGxiTxHEUXfEsb0',
-    database: 'd9sf1m39k2chh7'
+    host: 'utcnow.ddns.net',
+    port: '3306',
+    user: 'utcnow',
+    password: 'utcnow2016',
+    database: 'utcnow'
 });
 
 //Data base on the shitiest web site ever
