@@ -2,28 +2,23 @@
  * Created by alexandreabrantes on 5/19/16.
  */
 
+//Configuration variables
+var env = process.env.NODE_ENV || 'production';
+var config = require('./config')[env];
+// usage exemple : server.listen(config.server.port);
+
 // Modules
 var express = require('express');
 var mysql = require("mysql");
 
 // Connect to local mysql database
 var connection = mysql.createConnection({
-    host: 'utcnow.ddns.net',
-    port: '3306',
-    user: '***',
-    password: '****',
-    database: 'utcnow'
+    host: config.database.host,
+    port: config.database.port,
+    user: config.database.user,
+    password: config.database.password,
+    database: config.database.db
 });
-
-//Data base on the shitiest web site ever
-/*var connection = mysql.createConnection({
-    host: 'sql7.freemysqlhosting.net',
-    port: '3306',
-    user: 'sql7121051',
-    password: 'azAp2vKtN7',
-    database: 'sql7121051'
-});*/
-
 
 connection.connect();
 
@@ -64,7 +59,7 @@ app.get('/api/events', function (request, response) {
 
     // Query all events
     var query = 'SELECT * FROM events';
-
+    
     // key ->  start : query events after that date
     var startDate = request.query.start;
     if (startDate) {
@@ -217,10 +212,22 @@ app.post('/api/users', function (request, response) {
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
 
+    // key ->  id_event : add an user participating to an event
+    // key ->  user
+    var id_event = request.query.id_event;
+    var id_user = request.query.id_user;
+
     if (firstName && lastName) {
         var sql = "INSERT INTO ?? (firstName, lastName)" +
             "VALUES (?, ?)";
         var inserts = ['users', firstName, lastName];
+        query = mysql.format(sql, inserts);
+    }
+
+    else if (id_event && id_user) {
+        var sql = "INSERT INTO ?? (id_event, id_user)" +
+            "VALUES (?, ?)";
+        var inserts = ['rel_events_users', id_event, id_user];
         query = mysql.format(sql, inserts);
     }
 
@@ -286,7 +293,7 @@ process.on('exit', function () {
 
 
 //Heroku dynamic port;
-app.listen(process.env.PORT || 8080)
+app.listen(process.env.PORT || config.server.port)
 //app.listen(8080);
 
 // The code below will be use for CAS connection
