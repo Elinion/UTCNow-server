@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node web.js"
   },
-  "dependencies" : {
-    "express"    : "latest",
-    "mysql"    : "latest"
+  "dependencies": {
+    "express": "latest",
+    "mysql": "latest",
+    "pg": "4.5.5",
+    "request":"latest"
   },
   "repository": {
     "type": "git",

@@ -3,13 +3,14 @@
  */
 
 //Configuration variables
-var env = process.env.NODE_ENV || 'production';
+var env = process.env.NODE_ENV || 'development';
 var config = require('./config')[env];
 // usage exemple : server.listen(config.server.port);
 
 // Modules
 var express = require('express');
 var mysql = require("mysql");
+var request = require("request");
 
 // Connect to local mysql database
 var connection = mysql.createConnection({
@@ -23,12 +24,23 @@ var connection = mysql.createConnection({
 connection.connect();
 
 function executeQuery(connection, query, callback) {
-    connection.query(query, function (err, rows) {
-        if (err)
-            console.error('Query error: ' + err.stack);
-
-        callback(rows);
+    // Execute php script on UTC server (it is not possible to have access to the database from outside the UTC)
+    request.post({
+        url: 'http://assos.utc.fr/utcnow/query.php?query=' + query,
+        form: {password: config.queryPassword}
+    }, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            callback(body);
+        }
     });
+
+    // The code below will be used when we don't need to forward SQL queries anymore
+    // connection.query(query, function (err, rows) {
+    //     if (err)
+    //         console.error('Query error: ' + err.stack);
+    //
+    //     callback(rows);
+    // });
 }
 
 var app = express();
@@ -59,7 +71,7 @@ app.get('/api/events', function (request, response) {
 
     // Query all events
     var query = 'SELECT * FROM events';
-    
+
     // key ->  start : query events after that date
     var startDate = request.query.start;
     if (startDate) {
@@ -105,7 +117,7 @@ app.get('/api/events', function (request, response) {
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 
 });
@@ -130,7 +142,7 @@ app.post('/api/events', function (request, response) {
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
@@ -150,7 +162,7 @@ app.delete('/api/events', function (request, response) {
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
@@ -167,14 +179,14 @@ app.put('/api/events', function (request, response) {
     var startDate = request.query.start;
 
     if (id_event && name_event && desc_event && endDate && startDate) {
-        var sql = "UPDATE ?? SET ?? = ?, ?? = ?, ?? = ?, ?? = ? WHERE ?? = ?" ;
-        var inserts = ['events', 'name', name_event, 'start', startDate, 'end', endDate, 'description', desc_event ,'id_event', id_event];
+        var sql = "UPDATE ?? SET ?? = ?, ?? = ?, ?? = ?, ?? = ? WHERE ?? = ?";
+        var inserts = ['events', 'name', name_event, 'start', startDate, 'end', endDate, 'description', desc_event, 'id_event', id_event];
         query = mysql.format(sql, inserts);
     }
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
@@ -199,7 +211,7 @@ app.get('/api/users', function (request, response) {
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
@@ -233,7 +245,7 @@ app.post('/api/users', function (request, response) {
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
@@ -253,7 +265,7 @@ app.delete('/api/users', function (request, response) {
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
@@ -268,21 +280,20 @@ app.put('/api/users', function (request, response) {
     var id_user = request.query.id;
 
     if (firstName && lastName && id_user) {
-        var sql = "UPDATE ?? SET ?? = ?, ?? = ? WHERE ?? = ?" ;
+        var sql = "UPDATE ?? SET ?? = ?, ?? = ? WHERE ?? = ?";
         var inserts = ['users', 'firstName', firstName, 'lastName', lastName, 'id_user', id_user];
         query = mysql.format(sql, inserts);
     }
 
     // Execute query
     executeQuery(connection, query, function (result) {
-        response.json(result);
+        response.send(result);
     });
 });
 
 // ===========================================================================
 // ==============================  API  END   ================================
 // ===========================================================================
-
 
 
 // Close database connection when shutting down the server
