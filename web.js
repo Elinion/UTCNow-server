@@ -12,18 +12,18 @@ var express = require('express');
 var mysql = require("mysql");
 var request = require("request");
 
-// Connect to local mysql database
-var connection = mysql.createConnection({
-    host: config.database.host,
-    port: config.database.port,
-    user: config.database.user,
-    password: config.database.password,
-    database: config.database.db
-});
+// Connect to **local** mysql database
+// var connection = mysql.createConnection({
+//     host: config.database.host,
+//     port: config.database.port,
+//     user: config.database.user,
+//     password: config.database.password,
+//     database: config.database.db
+// });
+//
+// connection.connect();
 
-connection.connect();
-
-function executeQuery(connection, query, callback) {
+function executeQuery(query, callback) {
     // Execute php script on UTC server (it is not possible to have access to the database from outside the UTC)
     request.post({
         url: 'http://assos.utc.fr/utcnow/query.php?query=' + query,
@@ -116,7 +116,7 @@ app.get('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 
@@ -141,7 +141,7 @@ app.post('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -161,7 +161,7 @@ app.delete('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -185,7 +185,7 @@ app.put('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -210,7 +210,7 @@ app.get('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -244,7 +244,7 @@ app.post('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -264,7 +264,7 @@ app.delete('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -286,7 +286,7 @@ app.put('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -298,7 +298,7 @@ app.put('/api/users', function (request, response) {
 
 // Close database connection when shutting down the server
 process.on('exit', function () {
-    connection.end();
+    // connection.end();
     app.close();
 });
 
