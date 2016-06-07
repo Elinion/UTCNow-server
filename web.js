@@ -89,6 +89,18 @@ app.get('/api/events', function (request, response) {
         query = mysql.format(sql, inserts);
     }
 
+    // key ->  start : query events between two dates
+    // key -> end :
+    var endDate = request.query.end;
+    var startDate = request.query.start;
+    if (endDate && startDate) {
+        var sql = "SELECT * FROM ?? WHERE id_event NOT IN (SELECT id_event FROM `events` " +
+            "WHERE ?? < ? OR ?? > ?)";
+        var inserts = ['events', 'end', startDate, 'start', endDate];
+        query = mysql.format(sql, inserts);
+        console.log(query);
+    }
+
     // key -> id : query the event with this id
     var id_event = request.query.id;
     if (id_event) {
