@@ -70,9 +70,8 @@ app.get('/api/events', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all events
-    //var query = 'SELECT * FROM events';
     var queryAllEvent = 'SELECT ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
-
+    var query = queryAllEvent;
     // key ->  start : query events after that date
     var startDate = request.query.start;
     if (startDate) {
@@ -98,7 +97,6 @@ app.get('/api/events', function (request, response) {
             "WHERE ?? < ? OR ?? > ?)";
         var inserts = ['end', startDate, 'start', endDate];
         query = mysql.format(sql, inserts);
-        console.log(query);
     }
 
     // key -> id : query the event with this id
