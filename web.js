@@ -12,18 +12,18 @@ var express = require('express');
 var mysql = require("mysql");
 var request = require("request");
 
-// Connect to local mysql database
-var connection = mysql.createConnection({
-    host: config.database.host,
-    port: config.database.port,
-    user: config.database.user,
-    password: config.database.password,
-    database: config.database.db
-});
+// Connect to **local** mysql database
+// var connection = mysql.createConnection({
+//     host: config.database.host,
+//     port: config.database.port,
+//     user: config.database.user,
+//     password: config.database.password,
+//     database: config.database.db
+// });
+//
+// connection.connect();
 
-connection.connect();
-
-function executeQuery(connection, query, callback) {
+function executeQuery(query, callback) {
     // Execute php script on UTC server (it is not possible to have access to the database from outside the UTC)
     request.post({
         url: 'http://assos.utc.fr/utcnow/query.php?query=' + query,
@@ -88,6 +88,18 @@ app.get('/api/events', function (request, response) {
         query = mysql.format(sql, inserts);
     }
 
+    // key ->  start : query events between two dates
+    // key -> end :
+    var endDate = request.query.end;
+    var startDate = request.query.start;
+    if (endDate && startDate) {
+        var sql = "SELECT * FROM ?? WHERE id_event NOT IN (SELECT id_event FROM `events` " +
+            "WHERE ?? < ? OR ?? > ?)";
+        var inserts = ['events', 'end', startDate, 'start', endDate];
+        query = mysql.format(sql, inserts);
+        console.log(query);
+    }
+
     // key -> id : query the event with this id
     var id_event = request.query.id;
     if (id_event) {
@@ -116,7 +128,7 @@ app.get('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 
@@ -141,7 +153,7 @@ app.post('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -161,7 +173,7 @@ app.delete('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -185,7 +197,7 @@ app.put('/api/events', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -210,7 +222,7 @@ app.get('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -244,7 +256,7 @@ app.post('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -264,7 +276,7 @@ app.delete('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -286,7 +298,7 @@ app.put('/api/users', function (request, response) {
     }
 
     // Execute query
-    executeQuery(connection, query, function (result) {
+    executeQuery(query, function (result) {
         response.send(result);
     });
 });
@@ -298,7 +310,7 @@ app.put('/api/users', function (request, response) {
 
 // Close database connection when shutting down the server
 process.on('exit', function () {
-    connection.end();
+    // connection.end();
     app.close();
 });
 
