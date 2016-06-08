@@ -71,7 +71,7 @@ app.get('/api/events', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all events
-    var queryAllEvent = 'SELECT ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
+    var queryAllEvent = 'SELECT ev.id, ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
     var query = queryAllEvent;
     // key ->  start : query events after that date
     var startDate = request.query.start;
