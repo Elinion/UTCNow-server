@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="de33c407-3b15-4096-9356-3b8e67a047a8" name="Default" comment="API : event between two dates">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/web.js" afterPath="$PROJECT_DIR$/web.js" />
-    </list>
-    <list id="4a842733-382e-4d07-9838-022e5359135b" name="Rejected commit: Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/UTCNow-server.iml" afterPath="$PROJECT_DIR$/.idea/UTCNow-server.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
+    <list id="4a842733-382e-4d07-9838-022e5359135b" name="Rejected commit: Default" comment="" />
     <ignored path="UTCNow-server.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -31,10 +27,10 @@
       <file leaf-file-name="web.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/web.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="97" column="54" selection-start-line="97" selection-start-column="54" selection-end-line="97" selection-end-column="54" />
+            <state relative-caret-position="315">
+              <caret line="51" column="63" selection-start-line="51" selection-start-column="63" selection-end-line="51" selection-end-column="63" />
               <folding>
-                <element signature="e#0#51#0" expanded="false" />
+                <marker date="1465374936000" expanded="false" signature="0:51" ph="/** Created by alexandreabrantes on 5/19/16. ...*/" />
               </folding>
             </state>
           </provider>
@@ -389,7 +385,7 @@
       <workItem from="1464521657143" duration="17564000" />
       <workItem from="1464859814403" duration="2495000" />
       <workItem from="1464947834965" duration="11586000" />
-      <workItem from="1465310616088" duration="4482000" />
+      <workItem from="1465310616088" duration="5592000" />
     </task>
     <task id="LOCAL-00001" summary="server update">
       <created>1464519473822</created>
@@ -451,7 +447,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="51301000" />
+    <option name="totallyTimeSpent" value="52411000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
@@ -507,7 +503,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#51#0" expanded="false" />
+            <marker date="1465374936000" expanded="false" signature="0:51" ph="/** Created by alexandreabrantes on 5/19/16. ...*/" />
           </folding>
         </state>
       </provider>
@@ -557,7 +553,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#51#0" expanded="false" />
+            <marker date="1465374936000" expanded="false" signature="0:51" ph="/** Created by alexandreabrantes on 5/19/16. ...*/" />
           </folding>
         </state>
       </provider>
@@ -591,7 +587,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#51#0" expanded="false" />
+            <marker date="1465374936000" expanded="false" signature="0:51" ph="/** Created by alexandreabrantes on 5/19/16. ...*/" />
           </folding>
         </state>
       </provider>
@@ -601,7 +597,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#51#0" expanded="false" />
+            <marker date="1465374936000" expanded="false" signature="0:51" ph="/** Created by alexandreabrantes on 5/19/16. ...*/" />
           </folding>
         </state>
       </provider>
@@ -658,10 +654,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/web.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="97" column="54" selection-start-line="97" selection-start-column="54" selection-end-line="97" selection-end-column="54" />
+        <state relative-caret-position="315">
+          <caret line="51" column="63" selection-start-line="51" selection-start-column="63" selection-end-line="51" selection-end-column="63" />
           <folding>
-            <element signature="e#0#51#0" expanded="false" />
+            <marker date="1465374936000" expanded="false" signature="0:51" ph="/** Created by alexandreabrantes on 5/19/16. ...*/" />
           </folding>
         </state>
       </provider>
