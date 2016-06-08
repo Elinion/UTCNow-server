@@ -26,7 +26,7 @@ var request = require("request");
 function executeQuery(query, callback) {
     // Execute php script on UTC server (it is not possible to have access to the database from outside the UTC)
     request.post({
-        url: 'http://assos.utc.fr/utcnow/query.php?query=' + query,
+        url: 'http://assos.utc.fr/utcnow/query.php?query=' + query + '&' + Math.random() ,
         form: {password: config.queryPassword}
     }, function (error, response, body) {
         if (!error && response.statusCode == 200) {
@@ -125,7 +125,6 @@ app.get('/api/events', function (request, response) {
         query = mysql.format(sql, inserts);
     }
 
-    console.log(query);
     // Execute query
     executeQuery(query, function (result) {
         response.send(result);
@@ -164,9 +163,8 @@ app.delete('/api/events', function (request, response) {
 
     // key ->  id
     var id_event = request.query.id;
-
     if (id_event) {
-        var sql = "DELETE FROM ?? WHERE ?? = ?";
+        var sql = "DELETE FROM ?? @WHERE ?? = ?";
         var inserts = ['events', 'id_event', id_event];
         query = mysql.format(sql, inserts);
     }
@@ -231,12 +229,9 @@ app.get('/api/users', function (request, response) {
 app.post('/api/users', function (request, response) {
     response.set('Content-Type', 'application/json');
 
-    // keys ->  lastName, firstName
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
 
-    // key ->  id_event : add an user participating to an event
-    // key ->  user
     var id_event = request.query.id_event;
     var id_user = request.query.id_user;
 
@@ -285,7 +280,7 @@ app.delete('/api/users', function (request, response) {
 app.put('/api/users', function (request, response) {
     response.set('Content-Type', 'application/json');
 
-    // keys ->  lastName, firstName
+    // keys ->  lastName, firstName, id_user
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
     var id_user = request.query.id;
