@@ -119,7 +119,7 @@ app.get('/api/events', function (request, response) {
     //key -> id_user : query all event where the user is participating
     var id_user = request.query.id_user;
     if (id_user) {
-        var sql = "SELECT e.name, e.start, e.end, e.description " +
+        var sql = "SELECT e.id_event, e.name, e.start, e.end, e.description " +
             "FROM events e " +
             "INNER JOIN rel_events_users r ON e.id_event = r.id_event " +
             "WHERE id_user = ? ";
@@ -144,11 +144,12 @@ app.post('/api/events', function (request, response) {
     var desc_event = request.query.desc;
     var endDate = request.query.end;
     var startDate = request.query.start;
+    var location = request.query.loc;
 
-    if (name_event && desc_event && endDate && startDate) {
-        var sql = "INSERT INTO ?? (name, start, end, description)" +
-            "VALUES (?, ?, ?, ?)";
-        var inserts = ['events', name_event, startDate, endDate, desc_event];
+    if (name_event && desc_event && endDate && startDate && location) {
+        var sql = "INSERT INTO ?? (name, start, end, description,location)" +
+            "VALUES (?, ?, ?, ?, ?)";
+        var inserts = ['events', name_event, startDate, endDate, desc_event, location];
         query = mysql.format(sql, inserts);
     }
 
