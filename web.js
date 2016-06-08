@@ -71,7 +71,7 @@ app.get('/api/events', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all events
-    var queryAllEvent = 'SELECT ev.id, ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
+    var queryAllEvent = 'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
     var query = queryAllEvent;
     // key ->  start : query events after that date
     var startDate = request.query.start;
@@ -90,9 +90,7 @@ app.get('/api/events', function (request, response) {
     }
 
     // key ->  start : query events between two dates
-    // key -> end :
-    var endDate = request.query.end;
-    var startDate = request.query.start;
+    // key -> end
     if (endDate && startDate) {
         var sql = queryAllEvent + "WHERE id_event NOT IN (SELECT id_event FROM `events` " +
             "WHERE ?? < ? OR ?? > ?)";
@@ -127,6 +125,7 @@ app.get('/api/events', function (request, response) {
         query = mysql.format(sql, inserts);
     }
 
+    console.log(query);
     // Execute query
     executeQuery(query, function (result) {
         response.send(result);
