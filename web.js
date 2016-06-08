@@ -50,6 +50,7 @@ app.all('/*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTION, TRACE');
     next();
 });
 
@@ -70,21 +71,21 @@ app.get('/api/events', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all events
-    var query = 'SELECT ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
-
+    var queryAllEvent = 'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
+    var query = queryAllEvent;
     // key ->  start : query events after that date
     var startDate = request.query.start;
     if (startDate) {
-        var sql = "SELECT * FROM ?? WHERE ?? >= ?";
-        var inserts = ['events', 'end', startDate];
+        var sql = queryAllEvent + "WHERE ?? >= ?";
+        var inserts = ['end', startDate];
         query = mysql.format(sql, inserts);
     }
 
     // key -> end : query events before that date
     var endDate = request.query.end;
     if (endDate) {
-        var sql = "SELECT * FROM ?? WHERE ?? <= ?";
-        var inserts = ['events', 'start', endDate];
+        var sql = queryAllEvent + "WHERE ?? <= ?";
+        var inserts = ['start', endDate];
         query = mysql.format(sql, inserts);
     }
 
@@ -93,26 +94,25 @@ app.get('/api/events', function (request, response) {
     var endDate = request.query.end;
     var startDate = request.query.start;
     if (endDate && startDate) {
-        var sql = "SELECT * FROM ?? WHERE id_event NOT IN (SELECT id_event FROM `events` " +
+        var sql = queryAllEvent + "WHERE id_event NOT IN (SELECT id_event FROM `events` " +
             "WHERE ?? < ? OR ?? > ?)";
-        var inserts = ['events', 'end', startDate, 'start', endDate];
+        var inserts = ['end', startDate, 'start', endDate];
         query = mysql.format(sql, inserts);
-        console.log(query);
     }
 
     // key -> id : query the event with this id
     var id_event = request.query.id;
     if (id_event) {
-        var sql = "SELECT * FROM ?? WHERE ?? = ?";
-        var inserts = ['events', 'id_event', id_event];
+        var sql = queryAllEvent + "WHERE ?? = ?";
+        var inserts = ['id_event', id_event];
         query = mysql.format(sql, inserts);
     }
 
     // key -> name : query the event with this name
     var name_event = request.query.name;
     if (name_event) {
-        var sql = "SELECT * FROM ?? WHERE ?? = ?";
-        var inserts = ['events', 'name', name_event];
+        var sql = queryAllEvent + "WHERE ?? = ?";
+        var inserts = ['name', name_event];
         query = mysql.format(sql, inserts);
     }
 
