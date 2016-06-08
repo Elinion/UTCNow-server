@@ -11,6 +11,10 @@ var config = require('./config')[env];
 var express = require('express');
 var mysql = require("mysql");
 var request = require("request");
+var bodyParser = require('body-parser');
+var morgan = require('morgan');
+var passport = require('passport');
+var jwt = require('jwt-simple');
 
 // Connect to **local** mysql database
 // var connection = mysql.createConnection({
@@ -45,6 +49,9 @@ function executeQuery(query, callback) {
 
 var app = express();
 
+// Use the passport package in our application
+app.use(passport.initialize());
+
 // Allow CORS (Cross-Origin Resource Sharing)
 app.all('/*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -71,7 +78,12 @@ app.get('/api/events', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all events
-    var queryAllEvent = 'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
+    var queryAllEvent =
+        'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location, tp.id_type type ' +
+        'FROM `events` ev ' +
+        'LEFT JOIN `locations` lc USING(`id_location`) ' +
+        'LEFT JOIN `types` tp USING(`id_type`)';
+
     var query = queryAllEvent;
     // key ->  start : query events after that date
     var startDate = request.query.start;

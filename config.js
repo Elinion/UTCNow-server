@@ -16,7 +16,9 @@ var config = {
             port: '8080'
         },
         // Password used when forwarding the SQL query to the UTC-hosted PHP website
-        queryPassword: 'InTheWhiteBoardWeTrust'
+        queryPassword: 'InTheWhiteBoardWeTrust',
+        // Secret for encoding JWT authorization
+        jwtSecret: 'TheWhiteBoardConsumesYou'
     },
     production: {
         //url to be used in link generation
@@ -35,7 +37,9 @@ var config = {
             port:   '8080'
         },
         // Password used when forwarding the SQL query to the UTC-hosted PHP website
-        queryPassword: 'InTheWhiteBoardWeTrust'
+        queryPassword: 'InTheWhiteBoardWeTrust',
+        // Secret for encoding JWT authorization
+        jwtSecret: 'TheWhiteBoardConsumesYou'
     }
 };
 module.exports = config;
