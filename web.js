@@ -274,12 +274,12 @@ app.post('/api/events', function (request, response) {
     var desc_event = request.query.desc;
     var endDate = request.query.end;
     var startDate = request.query.start;
-    var location = request.query.loc;
+    //var location = request.query.loc;
 
-    if (name_event && desc_event && endDate && startDate && location) {
-        var sql = "INSERT INTO ?? (name, start, end, description,location)" +
-            "VALUES (?, ?, ?, ?, ?)";
-        var inserts = ['events', name_event, startDate, endDate, desc_event, location];
+    if (name_event && desc_event && endDate && startDate) {
+        var sql = "INSERT INTO ?? (name, start, end, description)" +
+            "VALUES (?, ?, ?, ?)";
+        var inserts = ['events', name_event, startDate, endDate, desc_event];
         query = mysql.format(sql, inserts);
     }
 
