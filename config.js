@@ -12,13 +12,16 @@ var config = {
         },
         //server details
         server: {
-            host: 'localhost',
+            host: 'http://localhost',
             port: '8080'
         },
         // Password used when forwarding the SQL query to the UTC-hosted PHP website
         queryPassword: 'InTheWhiteBoardWeTrust',
         // Secret for encoding JWT authorization
-        jwtSecret: 'TheWhiteBoardConsumesYou'
+        jwtSecret: 'TheWhiteBoardConsumesYou',
+        // Password granting admin access to the API 
+        // Providing the password lets you call the API without having to be logged in
+        apiPassword: 'WhiteboardWhiteboard,whoIsTheMostBeautiful?'
     },
     production: {
         //url to be used in link generation
@@ -39,7 +42,10 @@ var config = {
         // Password used when forwarding the SQL query to the UTC-hosted PHP website
         queryPassword: 'InTheWhiteBoardWeTrust',
         // Secret for encoding JWT authorization
-        jwtSecret: 'TheWhiteBoardConsumesYou'
+        jwtSecret: 'TheWhiteBoardConsumesYou',
+        // Password granting admin access to the API
+        // Providing the password lets you call the API without having to be logged in
+        apiPassword: 'WhiteboardWhiteboard,tellMe,whoIsTheMostBeautiful?'
     }
 };
 module.exports = config;

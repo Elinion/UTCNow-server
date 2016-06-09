@@ -12,9 +12,7 @@ var express = require('express');
 var mysql = require("mysql");
 var request = require("request");
 var bodyParser = require('body-parser');
-var morgan = require('morgan');
-var passport = require('passport');
-var jwt = require('jwt-simple');
+var jwt = require('jsonwebtoken');
 
 // Connect to **local** mysql database
 // var connection = mysql.createConnection({
@@ -49,9 +47,6 @@ function executeQuery(query, callback) {
 
 var app = express();
 
-// Use the passport package in our application
-app.use(passport.initialize());
-
 // Allow CORS (Cross-Origin Resource Sharing)
 app.all('/*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -67,6 +62,129 @@ app.get('/', function (request, response) {
     response.write('UTCNow server says hi buddy!');
     response.end();
 });
+
+// ===========================================================================
+// ==============================    AUTHENTICATION      =====================
+// ===========================================================================
+
+app.set('jwtSecret', config.jwtSecret);
+
+// get our request parameters
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+// route to authenticate a user (POST http://localhost:8080/api/authenticate)
+app.get('/authenticate', function (req, res) {
+    var ticket = req.query.ticket;
+    var service = 'http://localhost:8080/authenticate';
+
+    // Check authentication with UTC CAS authenticator
+    request('https://cas.utc.fr/cas/serviceValidate?service=' + service + '&ticket=' + ticket, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            // Get user email
+            var mailRegex = /mail>([a-zA-z\.]*@[a-zA-z\.]*)<\/cas:mail/i;
+            var mail = mailRegex.exec(body)[1];
+
+            // Get user first name
+            var firstNameRegex = /givenName>([a-zA-z]*)<\/cas:givenName/i;
+            var firstName = firstNameRegex.exec(body)[1];
+
+            // Get user last name
+            var lastNameRegex = /sn>([a-zA-z]*)<\/cas:sn/i;
+            var lastName = lastNameRegex.exec(body)[1];
+
+            // Get user vega login
+            var loginRegex = /user>([a-zA-z]*)<\/cas:user/i;
+            var login = loginRegex.exec(body)[1];
+
+            // TODO: add get user by mail to the API
+            var userExistsQuery = "SELECT mail FROM `users` WHERE mail LIKE '" + mail + "'";
+            executeQuery(userExistsQuery, function (result) {
+                // If the user connects for the first time, create an account
+                if (!result) {
+                    console.log('add user');
+                    // API query parameters to add a user
+                    var firstNameParam = 'firstName=' + firstName;
+                    var lastNameParam = 'lastName=' + lastName;
+                    var mailParam = 'mail=' + mail;
+                    var loginParam = 'login=' + login;
+                    var addUserQuery = '/api/users?' + firstNameParam + '&' + lastNameParam + '&' + mailParam + '&' + loginParam;
+                    var addUserUrl = config.server.host + ':' + config.server.port + addUserQuery;
+                    console.log(addUserUrl);
+
+                    // API call
+                    request.post({
+                        url: addUserUrl,
+                        form: {password: config.apiPassword}
+                    }, function () {
+                    });
+                }
+
+                // Create a JWT token
+                var token = jwt.sign({name: 'alex'}, app.get('jwtSecret'), {
+                    expiresIn: 60 * 60 * 2 // expires in 2 hours
+                });
+
+                // Return the information including token as JSON
+                res.json({
+                    success: true,
+                    message: 'Login successful',
+                    token: token
+                });
+            });
+        } else {
+            res.send('Authentication failed');
+        }
+    })
+});
+
+// Get an instance of the router for api routes
+var apiRoutes = express.Router();
+
+// Route middleware to verify a token
+apiRoutes.use(function (req, res, next) {
+
+    // Check if an admin password was privided
+    var password = req.body.password;
+    console.log('api password ' + password)
+    if (password && password == config.apiPassword) {
+        next();
+    }
+    // Otherwise check if a JWT was provided
+    else {
+
+        // check header or url parameters or post parameters for token
+        var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+        // decode token
+        if (token) {
+
+            // verifies secret and checks exp
+            jwt.verify(token, app.get('jwtSecret'), function (err, decoded) {
+                if (err) {
+                    return res.json({success: false, message: 'Failed to authenticate token.'});
+                } else {
+                    // if everything is good, save to request for use in other routes
+                    req.decoded = decoded;
+                    next();
+                }
+            });
+
+        } else {
+
+            // if there is no token
+            // return an error
+            return res.status(403).send({
+                success: false,
+                message: 'No token provided.'
+            });
+
+        }
+    }
+});
+
+// apply the routes to our application with the prefix /api
+//app.use('/api', apiRoutes);
 
 // ===========================================================================
 // ==============================    API      ================================
@@ -247,6 +365,8 @@ app.post('/api/users', function (request, response) {
     // keys ->  lastName, firstName
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
+    var mail = request.query.mail;
+    var login = request.query.login;
 
     // key ->  id_event : add an user participating to an event
     // key ->  user
@@ -254,9 +374,9 @@ app.post('/api/users', function (request, response) {
     var id_user = request.query.id_user;
 
     if (firstName && lastName) {
-        var sql = "INSERT INTO ?? (firstName, lastName)" +
-            "VALUES (?, ?)";
-        var inserts = ['users', firstName, lastName];
+        var sql = "INSERT INTO ?? (firstName, lastName, mail, login)" +
+            "VALUES (?, ?, ?, ?)";
+        var inserts = ['users', firstName, lastName, mail, login];
         query = mysql.format(sql, inserts);
     }
 
