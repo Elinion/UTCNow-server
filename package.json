@@ -7,10 +7,13 @@
     "start": "node web.js"
   },
   "dependencies": {
+    "bcrypt": "^0.8.5",
+    "body-parser": "~1.9.2",
     "express": "latest",
+    "jsonwebtoken": "^7.0.0",
     "mysql": "latest",
     "pg": "4.5.5",
-    "request":"latest"
+    "request": "latest"
   },
   "repository": {
     "type": "git",

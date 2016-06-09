@@ -11,6 +11,8 @@ var config = require('./config')[env];
 var express = require('express');
 var mysql = require("mysql");
 var request = require("request");
+var bodyParser = require('body-parser');
+var jwt = require('jsonwebtoken');
 
 // Connect to **local** mysql database
 // var connection = mysql.createConnection({
@@ -26,7 +28,7 @@ var request = require("request");
 function executeQuery(query, callback) {
     // Execute php script on UTC server (it is not possible to have access to the database from outside the UTC)
     request.post({
-        url: 'http://assos.utc.fr/utcnow/query.php?query=' + query + '&' + Math.random() ,
+        url: 'http://assos.utc.fr/utcnow/query.php?query=' + query,
         form: {password: config.queryPassword}
     }, function (error, response, body) {
         if (!error && response.statusCode == 200) {
@@ -62,6 +64,129 @@ app.get('/', function (request, response) {
 });
 
 // ===========================================================================
+// ==============================    AUTHENTICATION      =====================
+// ===========================================================================
+
+app.set('jwtSecret', config.jwtSecret);
+
+// get our request parameters
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+// route to authenticate a user (POST http://localhost:8080/api/authenticate)
+app.get('/authenticate', function (req, res) {
+    var ticket = req.query.ticket;
+    var service = 'http://localhost:8080/authenticate';
+
+    // Check authentication with UTC CAS authenticator
+    request('https://cas.utc.fr/cas/serviceValidate?service=' + service + '&ticket=' + ticket, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            // Get user email
+            var mailRegex = /mail>([a-zA-z\.]*@[a-zA-z\.]*)<\/cas:mail/i;
+            var mail = mailRegex.exec(body)[1];
+
+            // Get user first name
+            var firstNameRegex = /givenName>([a-zA-z]*)<\/cas:givenName/i;
+            var firstName = firstNameRegex.exec(body)[1];
+
+            // Get user last name
+            var lastNameRegex = /sn>([a-zA-z]*)<\/cas:sn/i;
+            var lastName = lastNameRegex.exec(body)[1];
+
+            // Get user vega login
+            var loginRegex = /user>([a-zA-z]*)<\/cas:user/i;
+            var login = loginRegex.exec(body)[1];
+
+            // TODO: add get user by mail to the API
+            var userExistsQuery = "SELECT mail FROM `users` WHERE mail LIKE '" + mail + "'";
+            executeQuery(userExistsQuery, function (result) {
+                // If the user connects for the first time, create an account
+                if (!result) {
+                    console.log('add user');
+                    // API query parameters to add a user
+                    var firstNameParam = 'firstName=' + firstName;
+                    var lastNameParam = 'lastName=' + lastName;
+                    var mailParam = 'mail=' + mail;
+                    var loginParam = 'login=' + login;
+                    var addUserQuery = '/api/users?' + firstNameParam + '&' + lastNameParam + '&' + mailParam + '&' + loginParam;
+                    var addUserUrl = config.server.host + ':' + config.server.port + addUserQuery;
+                    console.log(addUserUrl);
+
+                    // API call
+                    request.post({
+                        url: addUserUrl,
+                        form: {password: config.apiPassword}
+                    }, function () {
+                    });
+                }
+
+                // Create a JWT token
+                var token = jwt.sign({name: 'alex'}, app.get('jwtSecret'), {
+                    expiresIn: 60 * 60 * 2 // expires in 2 hours
+                });
+
+                // Return the information including token as JSON
+                res.json({
+                    success: true,
+                    message: 'Login successful',
+                    token: token
+                });
+            });
+        } else {
+            res.send('Authentication failed');
+        }
+    })
+});
+
+// Get an instance of the router for api routes
+var apiRoutes = express.Router();
+
+// Route middleware to verify a token
+apiRoutes.use(function (req, res, next) {
+
+    // Check if an admin password was privided
+    var password = req.body.password;
+    console.log('api password ' + password)
+    if (password && password == config.apiPassword) {
+        next();
+    }
+    // Otherwise check if a JWT was provided
+    else {
+
+        // check header or url parameters or post parameters for token
+        var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+        // decode token
+        if (token) {
+
+            // verifies secret and checks exp
+            jwt.verify(token, app.get('jwtSecret'), function (err, decoded) {
+                if (err) {
+                    return res.json({success: false, message: 'Failed to authenticate token.'});
+                } else {
+                    // if everything is good, save to request for use in other routes
+                    req.decoded = decoded;
+                    next();
+                }
+            });
+
+        } else {
+
+            // if there is no token
+            // return an error
+            return res.status(403).send({
+                success: false,
+                message: 'No token provided.'
+            });
+
+        }
+    }
+});
+
+// apply the routes to our application with the prefix /api
+//app.use('/api', apiRoutes);
+
+// ===========================================================================
 // ==============================    API      ================================
 // ===========================================================================
 
@@ -71,7 +196,12 @@ app.get('/api/events', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all events
-    var queryAllEvent = 'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location FROM `events` ev LEFT JOIN `locations` lc USING(`id_location`)';
+    var queryAllEvent =
+        'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location, tp.id_type type ' +
+        'FROM `events` ev ' +
+        'LEFT JOIN `locations` lc USING(`id_location`) ' +
+        'LEFT JOIN `types` tp USING(`id_type`)';
+
     var query = queryAllEvent;
     // key ->  start : query events after that date
     var startDate = request.query.start;
@@ -90,7 +220,9 @@ app.get('/api/events', function (request, response) {
     }
 
     // key ->  start : query events between two dates
-    // key -> end
+    // key -> end :
+    var endDate = request.query.end;
+    var startDate = request.query.start;
     if (endDate && startDate) {
         var sql = queryAllEvent + "WHERE id_event NOT IN (SELECT id_event FROM `events` " +
             "WHERE ?? < ? OR ?? > ?)";
@@ -117,7 +249,7 @@ app.get('/api/events', function (request, response) {
     //key -> id_user : query all event where the user is participating
     var id_user = request.query.id_user;
     if (id_user) {
-        var sql = "SELECT e.name, e.start, e.end, e.description " +
+        var sql = "SELECT e.id_event, e.name, e.start, e.end, e.description " +
             "FROM events e " +
             "INNER JOIN rel_events_users r ON e.id_event = r.id_event " +
             "WHERE id_user = ? ";
@@ -142,11 +274,12 @@ app.post('/api/events', function (request, response) {
     var desc_event = request.query.desc;
     var endDate = request.query.end;
     var startDate = request.query.start;
+    var location = request.query.loc;
 
-    if (name_event && desc_event && endDate && startDate) {
-        var sql = "INSERT INTO ?? (name, start, end, description)" +
-            "VALUES (?, ?, ?, ?)";
-        var inserts = ['events', name_event, startDate, endDate, desc_event];
+    if (name_event && desc_event && endDate && startDate && location) {
+        var sql = "INSERT INTO ?? (name, start, end, description,location)" +
+            "VALUES (?, ?, ?, ?, ?)";
+        var inserts = ['events', name_event, startDate, endDate, desc_event, location];
         query = mysql.format(sql, inserts);
     }
 
@@ -163,8 +296,9 @@ app.delete('/api/events', function (request, response) {
 
     // key ->  id
     var id_event = request.query.id;
+
     if (id_event) {
-        var sql = "DELETE FROM ?? @WHERE ?? = ?";
+        var sql = "DELETE FROM ?? WHERE ?? = ?";
         var inserts = ['events', 'id_event', id_event];
         query = mysql.format(sql, inserts);
     }
@@ -229,16 +363,21 @@ app.get('/api/users', function (request, response) {
 app.post('/api/users', function (request, response) {
     response.set('Content-Type', 'application/json');
 
+    // keys ->  lastName, firstName
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
+    var mail = request.query.mail;
+    var login = request.query.login;
 
+    // key ->  id_event : add an user participating to an event
+    // key ->  user
     var id_event = request.query.id_event;
     var id_user = request.query.id_user;
 
     if (firstName && lastName) {
-        var sql = "INSERT INTO ?? (firstName, lastName)" +
-            "VALUES (?, ?)";
-        var inserts = ['users', firstName, lastName];
+        var sql = "INSERT INTO ?? (firstName, lastName, mail, login)" +
+            "VALUES (?, ?, ?, ?)";
+        var inserts = ['users', firstName, lastName, mail, login];
         query = mysql.format(sql, inserts);
     }
 
@@ -280,7 +419,7 @@ app.delete('/api/users', function (request, response) {
 app.put('/api/users', function (request, response) {
     response.set('Content-Type', 'application/json');
 
-    // keys ->  lastName, firstName, id_user
+    // keys ->  lastName, firstName
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
     var id_user = request.query.id;
