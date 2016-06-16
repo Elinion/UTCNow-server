@@ -200,7 +200,7 @@ app.get('/api/events', function (request, response) {
         'SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location, tp.id_type type ' +
         'FROM `events` ev ' +
         'LEFT JOIN `locations` lc USING(`id_location`) ' +
-        'LEFT JOIN `types` tp USING(`id_type`)';
+        'LEFT JOIN `types` tp USING(`id_type`) ';
 
     var query = queryAllEvent;
     // key ->  start : query events after that date
@@ -220,13 +220,30 @@ app.get('/api/events', function (request, response) {
     }
 
     // key ->  start : query events between two dates
-    // key -> end :
-    var endDate = request.query.end;
-    var startDate = request.query.start;
+    // key -> end
     if (endDate && startDate) {
         var sql = queryAllEvent + "WHERE id_event NOT IN (SELECT id_event FROM `events` " +
             "WHERE ?? < ? OR ?? > ?)";
         var inserts = ['end', startDate, 'start', endDate];
+        query = mysql.format(sql, inserts);
+    }
+    
+    //For Viewer ONLY
+    //key -> start
+    //key -> end
+    //key -> ref (viewer reference)
+    var ref = request.query.ref;
+    if (endDate && startDate && ref) {
+        var sql = "SELECT ev.id_event, ev.name, ev.description, ev.start, ev.end, lc.name location, tp.id_type type " +
+            "FROM `events` ev " +
+                "LEFT JOIN `locations` lc USING(`id_location`) " +
+                "LEFT JOIN `types` tp USING(`id_type`) " +
+                "LEFT JOIN viewers vi USING(id_areas) " +
+            "WHERE " +
+                "(id_event NOT IN (SELECT id_event FROM `events` WHERE `end` < ? OR `start` > ?)) " +
+            "AND " +
+                "(vi.reference = ?)";
+        var inserts = [startDate, endDate, ref];
         query = mysql.format(sql, inserts);
     }
 
@@ -259,6 +276,7 @@ app.get('/api/events', function (request, response) {
 
     // Execute query
     executeQuery(query, function (result) {
+        console.log(query);
         response.send(result);
     });
 
@@ -339,7 +357,8 @@ app.get('/api/users', function (request, response) {
     response.set('Content-Type', 'application/json');
 
     // Query all users
-    var query = 'SELECT * FROM users';
+    var queryAllUsers = 'SELECT * FROM users ';
+    var query = queryAllUsers;
 
     // key ->  id_event : query users participating to this event
     var id_event = request.query.id_event;
@@ -352,6 +371,14 @@ app.get('/api/users', function (request, response) {
         query = mysql.format(sql, inserts);
     }
 
+    // key -> login : query the user with this login
+    var login = request.query.login;
+    if(login){
+        var sql = queryAllUsers + "WHERE ?? = ?";
+        var insert = ['login', login];
+        query = mysql.format(sql, insert);
+    }
+    console.log(query);
     // Execute query
     executeQuery(query, function (result) {
         response.send(result);
@@ -363,7 +390,7 @@ app.get('/api/users', function (request, response) {
 app.post('/api/users', function (request, response) {
     response.set('Content-Type', 'application/json');
 
-    // keys ->  lastName, firstName
+    // keys ->  lastName, firstName, mail, login
     var firstName = request.query.firstName;
     var lastName = request.query.lastName;
     var mail = request.query.mail;
@@ -374,7 +401,14 @@ app.post('/api/users', function (request, response) {
     var id_event = request.query.id_event;
     var id_user = request.query.id_user;
 
-    if (firstName && lastName) {
+    if (login){
+        var sql ="INSERT INTO ?? (login)" +
+            "VALUES (?)";
+        var inserts = ['users', login];
+        query = mysql.format(sql, inserts);
+    }
+
+    else if (firstName && lastName && login) {
         var sql = "INSERT INTO ?? (firstName, lastName, mail, login)" +
             "VALUES (?, ?, ?, ?)";
         var inserts = ['users', firstName, lastName, mail, login];
